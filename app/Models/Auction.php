@@ -15,4 +15,26 @@ class Auction extends Model
     {
         return $this->hasMany(Team::class);
     }
+
+    static public function findByGuid($guid)
+    {
+        return self::where('guid', $guid)->first();
+    }
+
+    static public function getAuction()
+    {
+        return self::orderBy('name', 'ASC')
+            ->whereIn('status', ['ongoing', 'upcoming'])
+            ->where('is_deleted', '!=', '1')
+            ->get();
+    }
+
+    static public function getAuctionName($id)
+    {
+        $auction = self::find($id);
+
+        return $auction
+            ? $auction->name . ' - ' . $auction->season
+            : null;
+    }
 }

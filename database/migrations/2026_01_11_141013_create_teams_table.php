@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->integer('auction_id')->unsigned();
             $table->string('name');
-            $table->string('short_name');
+            $table->string('short_name')->nullable();
             $table->string('total_purse');
-            $table->string('remaining_purse');
+            $table->string('remaining_purse')->nullable();
             $table->string('logo')->nullable();
             $table->timestamps();
         });

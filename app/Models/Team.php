@@ -11,4 +11,9 @@ class Team extends Model
         return $this->belongsToMany(Player::class, 'team_players')
                     ->withPivot('price');
     }
+
+    static public function findByGuid($guid)
+    {
+        return self::where('guid', $guid)->first();
+    }
 }

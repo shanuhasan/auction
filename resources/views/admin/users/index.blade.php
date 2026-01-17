@@ -4,11 +4,12 @@
 @section('content')
 
 <div class="container-xxl flex-grow-1 container-p-y">
-    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Users /</span> Users Table</h4>
-    <a href="{{ route('admin.user.create') }}" class="btn btn-primary">Add User</a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Home /</span> Users</h4>
+        <a href="{{ route('admin.user.create') }}" class="btn btn-primary">Add User</a>
+    </div>
     @include('admin.message')
     <div class="card">
-        <h5 class="card-header">Table Basic</h5>
         <div class="table-responsive text-nowrap">
             <table class="table">
                 <thead>
@@ -60,6 +61,9 @@
 
                 </tbody>
             </table>
+        </div>
+         <div class="card-footer clearfix">
+            {{ $users->links('pagination::bootstrap-5') }}
         </div>
     </div>
 </div>

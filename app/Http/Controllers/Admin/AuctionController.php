@@ -2,57 +2,55 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\User;
 use App\Models\Media;
+use App\Models\Auction;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
 
-class UserController extends Controller
+class AuctionController extends Controller
 {
     public function index(Request $request)
     {
-        $users = User::where('is_deleted', '!=', '1')
-                    ->where('role', '!=', 'superadmin')    
+        $auctions = Auction::where('is_deleted', '!=', '1')
                     ->orderBy('id', 'DESC');
 
-        if (!empty($request->get('keyword'))) {
-            $users = $users->where('name', 'like', '%' . $request->get('keyword') . '%');
+        if (!empty($request->get('name'))) {
+            $auctions = $auctions->where('name', 'like', '%' . $request->get('name') . '%');
         }
 
-        $users = $users->paginate(10);
+        if (!empty($request->get('status'))) {
+            $auctions = $auctions->where('status', 'like', '%' . $request->get('status') . '%');
+        }
 
-        return view('admin.users.index', [
-            'users' => $users
+        $auctions = $auctions->paginate(20);
+
+        return view('admin.auction.index', [
+            'auctions' => $auctions
         ]);
     }
 
     public function create()
     {
 
-        return view('admin.users.create');
+        return view('admin.auction.create');
     }
 
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|min:3',
-            'mobile' => 'required|numeric',
+            'season' => 'required|numeric',
             'status' => 'required',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:5|confirmed:confirm_password',
         ]);
 
         if ($validator->passes()) {
-            $model = new User();
+            $model = new Auction();
             $model->guid = GUIDv4();
             $model->name = $request->name;
-            $model->email = $request->email;
-            $model->mobile = $request->mobile;
+            $model->season = $request->season;
             $model->status = $request->status;
-            $model->password = Hash::make($request->password);
 
             //save image
             if (!empty($request->image_id)) {
@@ -62,24 +60,14 @@ class UserController extends Controller
 
                 $newImageName = $model->id . time() . '.' . $ext;
                 $sPath = public_path() . '/media/' . $media->name;
-                $dPath = public_path() . '/uploads/user/' . $newImageName;
+                $dPath = public_path() . '/uploads/auction/' . $newImageName;
                 File::copy($sPath, $dPath);
-
-                //generate thumb
-                // $dPath = public_path().'/uploads/user/thumb/'.$newImageName;
-                // $img = Image::make($sPath);
-                // // $img->resize(300, 200);
-                // $img->fit(300, 200, function ($constraint) {
-                //     $constraint->upsize();
-                // });
-                // $img->save($dPath);
-
-                $model->image = $newImageName;
+                $model->logo = $newImageName;
                 $model->save();
             }
             $model->save();
 
-            session()->flash('success', 'User added successfully.');
+            session()->flash('success', 'Auction added successfully.');
             return response()->json([
                 'status' => true
             ]);
@@ -94,46 +82,40 @@ class UserController extends Controller
     public function edit($guid, Request $request)
     {
 
-        $user = User::findByGuid($guid);
-        if (empty($user)) {
-            return redirect()->route('admin.user.index');
+        $auction = Auction::findByGuid($guid);
+        if (empty($auction)) {
+            return redirect()->route('admin.auction.index');
         }
 
-        return view('admin.users.edit', compact('user'));
+        return view('admin.auction.edit', compact('auction'));
     }
 
     public function update($guid, Request $request)
     {
-        $model = User::findByGuid($guid);
+        $model = Auction::findByGuid($guid);
         if (empty($model)) {
-            $request->session()->flash('error', 'User not found.');
+            $request->session()->flash('error', 'Auction not found.');
             return response()->json([
                 'status' => false,
                 'notFound' => true,
-                'message' => 'User not found.'
+                'message' => 'Auction not found.'
             ]);
         }
 
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email|unique:users,email,' . $model->id . ',id',
             'name' => 'required|min:3',
-            'mobile' => 'required|numeric',
+            'season' => 'required|numeric',
             'status' => 'required',
         ]);
 
         if ($validator->passes()) {
 
             $model->name = $request->name;
-            $model->mobile = $request->mobile;
+            $model->season = $request->season;
             $model->status = $request->status;
-
-            if ($request->password != "") {
-                $model->password = Hash::make($request->password);
-            }
-
             $model->save();
 
-            $oldImage = $model->image;
+            $oldImage = $model->logo;
 
             //save image
             if (!empty($request->image_id)) {
@@ -143,30 +125,18 @@ class UserController extends Controller
 
                 $newImageName = $model->id . time() . '.' . $ext;
                 $sPath = public_path() . '/media/' . $media->name;
-                $dPath = public_path() . '/uploads/user/' . $newImageName;
+                $dPath = public_path() . '/uploads/auction/' . $newImageName;
                 File::copy($sPath, $dPath);
-
-                //generate thumb
-                // $dPath = public_path().'/uploads/user/thumb/'.$newImageName;
-                // $img = Image::make($sPath);
-                // // $img->resize(300, 200);
-                // $img->fit(300, 200, function ($constraint) {
-                //     $constraint->upsize();
-                // });
-                // $img->save($dPath);
-
-                $model->image = $newImageName;
+                $model->logo = $newImageName;
                 $model->save();
 
-                //delete old image
-                // File::delete(public_path().'/uploads/user/thumb/'.$oldImage);
-                File::delete(public_path() . '/uploads/user/' . $oldImage);
+                File::delete(public_path() . '/uploads/auction/' . $oldImage);
             }
 
-            $request->session()->flash('success', 'User updated successfully.');
+            $request->session()->flash('success', 'Auction updated successfully.');
             return response()->json([
                 'status' => true,
-                'message' => 'User updated successfully.'
+                'message' => 'Auction updated successfully.'
             ]);
         } else {
             return response()->json([
@@ -178,29 +148,29 @@ class UserController extends Controller
 
     public function destroy($guid, Request $request)
     {
-        $model = User::findByGuid($guid);
+        $model = Auction::findByGuid($guid);
         if (empty($model)) {
-            $request->session()->flash('error', 'User not found.');
+            $request->session()->flash('error', 'Auction not found.');
             return response()->json([
                 'status' => true,
-                'message' => 'User not found.'
+                'message' => 'Auction not found.'
             ]);
         }
 
         $model->is_deleted = 1;
         $model->save();
 
-        $request->session()->flash('success', 'User deleted successfully.');
+        $request->session()->flash('success', 'Auction deleted successfully.');
 
         return response()->json([
             'status' => true,
-            'message' => 'User deleted successfully.'
+            'message' => 'Auction deleted successfully.'
         ]);
     }
 
-    public function deletedUser(Request $request)
+    public function deletedAuction(Request $request)
     {
-        $users = User::where('is_deleted', '=', '1')->orderBy('id', 'DESC');
+        $users = Auction::where('is_deleted', '=', '1')->orderBy('id', 'DESC');
 
         if (!empty($request->get('keyword'))) {
             $users = $users->where('name', 'like', '%' . $request->get('keyword') . '%');
@@ -208,30 +178,30 @@ class UserController extends Controller
 
         $users = $users->paginate(10);
 
-        return view('admin.user.delete', [
+        return view('admin.auction.delete', [
             'users' => $users
         ]);
     }
 
     public function restore($guid, Request $request)
     {
-        $model = User::findByGuid($guid);
+        $model = Auction::findByGuid($guid);
         if (empty($model)) {
-            $request->session()->flash('error', 'User not found.');
+            $request->session()->flash('error', 'Auction not found.');
             return response()->json([
                 'status' => true,
-                'message' => 'User not found.'
+                'message' => 'Auction not found.'
             ]);
         }
 
         $model->is_deleted = 0;
         $model->save();
 
-        $request->session()->flash('success', 'User Restore successfully.');
+        $request->session()->flash('success', 'Auction Restore successfully.');
 
         return response()->json([
             'status' => true,
-            'message' => 'User Restore successfully.'
+            'message' => 'Auction Restore successfully.'
         ]);
     }
 }

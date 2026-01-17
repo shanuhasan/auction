@@ -75,5 +75,19 @@
                 <div data-i18n="Users">Users</div>
             </a>
         </li>
+
+        <li class="menu-item @yield('auction')">
+            <a href="{{ route('admin.auction.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-purchase-tag"></i>
+                <div data-i18n="Auction">Auction</div>
+            </a>
+        </li>
+
+        <li class="menu-item @yield('team')">
+            <a href="{{ route('admin.team.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-group"></i>
+                <div data-i18n="Teams">Teams</div>
+            </a>
+        </li>
     </ul>
 </aside>

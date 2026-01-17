@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\AuctionController;
+use App\Http\Controllers\Admin\TeamController;
 use App\Http\Controllers\Admin\UploadImageController;
 
 Route::get('/', function () {
@@ -31,6 +33,22 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
         Route::get('/user/{guid}/edit', [UserController::class, 'edit'])->name('user.edit');
         Route::put('/user/{guid}', [UserController::class, 'update'])->name('user.update');
         Route::get('/user/{guid}', [UserController::class, 'destroy'])->name('user.delete');
+
+        //auctions
+        Route::get('/auction', [AuctionController::class, 'index'])->name('auction.index');
+        Route::get('/auction/create', [AuctionController::class, 'create'])->name('auction.create');
+        Route::post('/auction/store', [AuctionController::class, 'store'])->name('auction.store');
+        Route::get('/auction/{guid}/edit', [AuctionController::class, 'edit'])->name('auction.edit');
+        Route::put('/auction/{guid}', [AuctionController::class, 'update'])->name('auction.update');
+        Route::get('/auction/{guid}', [AuctionController::class, 'destroy'])->name('auction.delete');
+
+        //teams
+        Route::get('/team', [TeamController::class, 'index'])->name('team.index');
+        Route::get('/team/create', [TeamController::class, 'create'])->name('team.create');
+        Route::post('/team/store', [TeamController::class, 'store'])->name('team.store');
+        Route::get('/team/{guid}/edit', [TeamController::class, 'edit'])->name('team.edit');
+        Route::put('/team/{guid}', [TeamController::class, 'update'])->name('team.update');
+        Route::get('/team/{guid}', [TeamController::class, 'destroy'])->name('team.delete');
 
         Route::post('/upload-image', [UploadImageController::class, 'create'])->name('media.create');
     });
