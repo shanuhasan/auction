@@ -29,6 +29,14 @@ class Auction extends Model
             ->get();
     }
 
+    static public function getOngoingAuction()
+    {
+        return self::orderBy('name', 'ASC')
+            ->where('status', '=', 'ongoing')
+            ->where('is_deleted', '!=', '1')
+            ->get();
+    }
+
     static public function getAuctionName($id)
     {
         $auction = self::find($id);

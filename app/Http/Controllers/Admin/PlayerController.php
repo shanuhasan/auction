@@ -2,61 +2,55 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Team;
 use App\Models\Media;
-use App\Models\Auction;
+use App\Models\Player;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
 
-class TeamController extends Controller
+class PlayerController extends Controller
 {
     public function index(Request $request)
     {
-        $teams = Team::where('is_deleted', '!=', '1')
+        $players = Player::where('is_deleted', '!=', '1')
                     ->orderBy('id', 'DESC');
 
         if (!empty($request->get('name'))) {
-            $teams = $teams->where('name', 'like', '%' . $request->get('name') . '%');
+            $players = $players->where('name', 'like', '%' . $request->get('name') . '%');
         }
 
-        if (!empty($request->get('auction_id'))) {
-            $auction = Auction::findByGuid($request->get('auction_id'));
+        $players = $players->paginate(20);
 
-            $teams = $teams->where('auction_id', '=', $auction->id);
-        }
-
-        $teams = $teams->paginate(20);
-
-        return view('admin.team.index', [
-            'teams' => $teams
+        return view('admin.player.index', [
+            'players' => $players
         ]);
     }
 
     public function create()
     {
-
-        return view('admin.team.create');
+        return view('admin.player.create');
     }
 
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|min:3',
-            'auction_id' => 'required|numeric',
-            'total_purse' => 'required|numeric',
+            'role' => 'required',
+            'base_price' => 'required',
+            'jersey_name' => 'required',
+            'jersey_number' => 'required',
             'status' => 'required',
         ]);
 
         if ($validator->passes()) {
-            $model = new Team();
+            $model = new Player();
             $model->guid = GUIDv4();
             $model->name = $request->name;
-            $model->short_name = $request->short_name;
-            $model->auction_id = $request->auction_id;
-            $model->total_purse = $request->total_purse;
-            $model->remaining_purse = $request->total_purse;
+            $model->role = $request->role;
+            $model->base_price = $request->base_price;
+            $model->jersey_name = $request->jersey_name;
+            $model->jersey_number = $request->jersey_number;
             $model->status = $request->status;
 
             //save image
@@ -67,14 +61,14 @@ class TeamController extends Controller
 
                 $newImageName = $model->id . time() . '.' . $ext;
                 $sPath = public_path() . '/media/' . $media->name;
-                $dPath = public_path() . '/uploads/team/' . $newImageName;
+                $dPath = public_path() . '/uploads/player/' . $newImageName;
                 File::copy($sPath, $dPath);
-                $model->logo = $newImageName;
+                $model->image = $newImageName;
                 $model->save();
             }
             $model->save();
 
-            session()->flash('success', 'Team added successfully.');
+            session()->flash('success', 'Player added successfully.');
             return response()->json([
                 'status' => true
             ]);
@@ -89,43 +83,46 @@ class TeamController extends Controller
     public function edit($guid, Request $request)
     {
 
-        $team = Team::findByGuid($guid);
-        if (empty($team)) {
-            return redirect()->route('admin.team.index');
+        $player = Player::findByGuid($guid);
+        if (empty($player)) {
+            return redirect()->route('admin.player.index');
         }
 
-        return view('admin.team.edit', compact('team'));
+        return view('admin.player.edit', compact('player'));
     }
 
     public function update($guid, Request $request)
     {
-        $model = Team::findByGuid($guid);
+        $model = Player::findByGuid($guid);
         if (empty($model)) {
-            $request->session()->flash('error', 'Team not found.');
+            $request->session()->flash('error', 'Player not found.');
             return response()->json([
                 'status' => false,
                 'notFound' => true,
-                'message' => 'Team not found.'
+                'message' => 'Player not found.'
             ]);
         }
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|min:3',
-            'auction_id' => 'required|numeric',
-            'total_purse' => 'required|numeric',
+            'role' => 'required',
+            'base_price' => 'required',
+            'jersey_name' => 'required',
+            'jersey_number' => 'required',
             'status' => 'required',
         ]);
 
         if ($validator->passes()) {
 
             $model->name = $request->name;
-            $model->short_name = $request->short_name;
-            $model->auction_id = $request->auction_id;
-            $model->total_purse = $request->total_purse;
+            $model->role = $request->role;
+            $model->base_price = $request->base_price;
+            $model->jersey_name = $request->jersey_name;
+            $model->jersey_number = $request->jersey_number;
             $model->status = $request->status;
             $model->save();
 
-            $oldImage = $model->logo;
+            $oldImage = $model->image;
 
             //save image
             if (!empty($request->image_id)) {
@@ -135,18 +132,18 @@ class TeamController extends Controller
 
                 $newImageName = $model->id . time() . '.' . $ext;
                 $sPath = public_path() . '/media/' . $media->name;
-                $dPath = public_path() . '/uploads/team/' . $newImageName;
+                $dPath = public_path() . '/uploads/player/' . $newImageName;
                 File::copy($sPath, $dPath);
-                $model->logo = $newImageName;
+                $model->image = $newImageName;
                 $model->save();
 
-                File::delete(public_path() . '/uploads/team/' . $oldImage);
+                File::delete(public_path() . '/uploads/player/' . $oldImage);
             }
 
-            $request->session()->flash('success', 'Team updated successfully.');
+            $request->session()->flash('success', 'Player updated successfully.');
             return response()->json([
                 'status' => true,
-                'message' => 'Team updated successfully.'
+                'message' => 'Player updated successfully.'
             ]);
         } else {
             return response()->json([
@@ -158,29 +155,29 @@ class TeamController extends Controller
 
     public function destroy($guid, Request $request)
     {
-        $model = Team::findByGuid($guid);
+        $model = Player::findByGuid($guid);
         if (empty($model)) {
-            $request->session()->flash('error', 'Team not found.');
+            $request->session()->flash('error', 'Player not found.');
             return response()->json([
                 'status' => true,
-                'message' => 'Team not found.'
+                'message' => 'Player not found.'
             ]);
         }
 
         $model->is_deleted = 1;
         $model->save();
 
-        $request->session()->flash('success', 'Team deleted successfully.');
+        $request->session()->flash('success', 'Player deleted successfully.');
 
         return response()->json([
             'status' => true,
-            'message' => 'Team deleted successfully.'
+            'message' => 'Player deleted successfully.'
         ]);
     }
 
     public function deletedAuction(Request $request)
     {
-        $users = Team::where('is_deleted', '=', '1')->orderBy('id', 'DESC');
+        $users = Player::where('is_deleted', '=', '1')->orderBy('id', 'DESC');
 
         if (!empty($request->get('keyword'))) {
             $users = $users->where('name', 'like', '%' . $request->get('keyword') . '%');
@@ -188,30 +185,30 @@ class TeamController extends Controller
 
         $users = $users->paginate(10);
 
-        return view('admin.team.delete', [
+        return view('admin.player.delete', [
             'users' => $users
         ]);
     }
 
     public function restore($guid, Request $request)
     {
-        $model = Team::findByGuid($guid);
+        $model = Player::findByGuid($guid);
         if (empty($model)) {
-            $request->session()->flash('error', 'Team not found.');
+            $request->session()->flash('error', 'Player not found.');
             return response()->json([
                 'status' => true,
-                'message' => 'Team not found.'
+                'message' => 'Player not found.'
             ]);
         }
 
         $model->is_deleted = 0;
         $model->save();
 
-        $request->session()->flash('success', 'Team Restore successfully.');
+        $request->session()->flash('success', 'Player Restore successfully.');
 
         return response()->json([
             'status' => true,
-            'message' => 'Team Restore successfully.'
+            'message' => 'Player Restore successfully.'
         ]);
     }
 }

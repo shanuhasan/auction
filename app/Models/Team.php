@@ -16,4 +16,13 @@ class Team extends Model
     {
         return self::where('guid', $guid)->first();
     }
+
+    static public function getTeamByAuctionId($id)
+    {
+        return self::orderBy('name', 'ASC')
+            ->where('auction_id','=', $id)
+            ->where('status', '=', '1')
+            ->where('is_deleted', '!=', '1')
+            ->get();
+    }
 }

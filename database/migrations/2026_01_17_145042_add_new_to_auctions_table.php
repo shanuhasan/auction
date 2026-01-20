@@ -25,6 +25,8 @@ return new class extends Migration
         });
         Schema::table('players', function (Blueprint $table) {
             $table->string('guid', 36)->unique()->nullable()->after('id');
+            $table->string('image')->nullable()->after('jersey_number');
+            $table->tinyInteger('is_deleted')->default(0)->after('status');
         });
         Schema::table('sessions', function (Blueprint $table) {
             $table->string('guid', 36)->unique()->nullable()->after('id');
