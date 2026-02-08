@@ -7,6 +7,7 @@ use App\Models\Player;
 use Illuminate\Http\Request;
 use App\Models\AuctionPlayer;
 use App\Http\Controllers\Controller;
+use App\Models\TeamPlayer;
 use Illuminate\Support\Facades\Validator;
 
 class AuctionPlayerController extends Controller
@@ -15,8 +16,9 @@ class AuctionPlayerController extends Controller
     {
         $players = AuctionPlayer::orderBy('id', 'DESC');
 
-        if (!empty($request->get('name'))) {
-            $players = $players->where('name', 'like', '%' . $request->get('name') . '%');
+        if (!empty($request->get('player_id'))) {
+            $player = Player::findByGuid($request->get('player_id'));
+            $players = $players->where('player_id', $player->id);
         }
 
         $players = $players->paginate(20);
@@ -42,6 +44,30 @@ class AuctionPlayerController extends Controller
             'player_id' => 'required',
             'auction_id' => 'required'
         ]);
+
+        AuctionPlayer::where('auction_id', $request->auction_id)->update(['in_process' => 0]);
+        
+        $auctionStart = AuctionPlayer::where('auction_id', $request->auction_id)->where('player_id', $request->player_id)->first();
+
+        if(!empty($auctionStart)){
+
+            if($auctionStart->status == 'sold'){
+                session()->flash('error', 'Player already sold.');
+                return response()->json([
+                    'status' => true,
+                    'sold' => true,
+                    'message' => 'Player already sold.'
+                ]);
+            }
+
+            $auctionStart->update(['in_process' => 1]);
+
+            session()->flash('success', 'Auction Start...');
+            return response()->json([
+                'status' => true,
+                'guid'=> $auctionStart->guid
+            ]);
+        }
 
         if ($validator->passes()) {
             
@@ -69,10 +95,20 @@ class AuctionPlayerController extends Controller
     {
         $auctionPlayer = AuctionPlayer::findByGuid($guid);
 
+        if(empty($auctionPlayer)){
+            return redirect()->route('admin.auction-player.index');
+        }
+
+        AuctionPlayer::where('auction_id', $auctionPlayer->auction_id)->update(['in_process' => 0]);
+
         $player = Player::findById($auctionPlayer->player_id);
+
         if (empty($player)) {
             return redirect()->route('admin.auction-player.index');
         }
+
+        $auctionPlayer->in_process = 1;
+        $auctionPlayer->save();
 
         return view('admin.auction-player.start', [
             'player'=>$player,
@@ -114,7 +150,17 @@ class AuctionPlayerController extends Controller
 
             $model->team_id = $request->team_id;
             $model->sold_price = $request->sold_price;
-            $model->save();
+            $model->status = 'sold';
+            if($model->save()){
+                $team->remaining_purse = $team->remaining_purse - $request->sold_price;
+                $team->save();
+
+                $teamPlayer = new TeamPlayer();
+                $teamPlayer->team_id = $request->team_id;
+                $teamPlayer->player_id = $model->player_id;
+                $teamPlayer->sold_price = $model->sold_price;
+                $teamPlayer->save();
+            }
 
             $request->session()->flash('success', 'Player Sold successfully.');
             return response()->json([

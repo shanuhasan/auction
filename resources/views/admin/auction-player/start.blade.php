@@ -53,6 +53,15 @@
                             @endif
                         </div>
                     </div>
+                    @if($auctionPlayer->status == 'sold')
+                        <div class="row mb-3">
+                            <label class="col-sm-2 col-form-label" for="sold_price">Sold Price</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control only-number" id="sold_price" placeholder="Enter Sold Price" name="sold_price" value="{{ $auctionPlayer->sold_price }}" readonly />
+                                <p class="error"></p>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -88,6 +97,7 @@
                             <div class="col-sm-10">
                                 <button type="submit" class="btn btn-primary">Biding / Sold</button>
                                 <a href="{{ route('admin.player.index') }}" class="btn btn-danger ml-3">Unsold</a>
+                                <a href="{{ route('admin.player.index') }}" class="btn btn-info ml-3">Cancel</a>
                             </div>
                         </div>
                     </form>
@@ -115,6 +125,10 @@
             success: function(response) {
                 $('button[type=submit]').prop('disabled', false);
                 if (response['status'] == true) {
+
+                    if (response['sold'] == true) {
+                        window.location.href = "{{route('admin.player.index')}}";
+                    }
 
                     window.location.href = "{{ route('admin.player.index') }}";
                     $('.error').removeClass('invalid-feedback').html('');

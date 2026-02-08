@@ -17,7 +17,12 @@
                     <div class="row card-body">
                         <div class="col-md-6 mb-3">
                             <label for="name" class="form-label">Name</label>
-                            <input type="text" class="form-control" name="name" placeholder="Player Name" value="{{ Request::get('name') }}" />
+                            <select class="form-select" id="player_id" name="player_id">
+                                <option selected>Select Player</option>
+                                @foreach(\App\Models\Player::getAllPlayer() as $item)
+                                    <option value="{{ $item->guid }}" {{ $item->guid == request()->get('player_id') ? 'selected' : '' }}>{{ $item->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="col-sm-10">
                             <button type="submit" class="btn btn-success">Search</button>
@@ -50,9 +55,9 @@
                     @foreach ($players as $player)
                     <tr>
                         <td>{{$i++}}</td>
-                        <td><strong>{{$player->player_id}}</strong></td>
-                        <td><strong>{{$player->auction_id}}</strong></td>
-                        <td><strong>{{$player->team_id}}</strong></td>
+                        <td><strong>{{\App\Models\Player::getName($player->player_id)}}</strong></td>
+                        <td><strong>{{\App\Models\Auction::getAuctionName($player->auction_id)}}</strong></td>
+                        <td><strong>{{\App\Models\Team::getName($player->team_id)}}</strong></td>
                         <td><strong>{{$player->sold_price}}</strong></td>
                         <td><strong>{{$player->status}}</strong></td>
                         <td>
@@ -61,7 +66,7 @@
                                     <i class="bx bx-dots-vertical-rounded"></i>
                                 </button>
                                 <div class="dropdown-menu">
-                                    <a class="dropdown-item" href="{{ route('admin.player.edit', $player->guid) }}"><i class="bx bx-edit-alt me-1"></i> Edit</a>
+                                    <a class="dropdown-item" href="{{ route('admin.auction-player.start', $player->guid) }}"><i class="bx bx-edit-alt me-1"></i> Edit</a>
                                 </div>
                             </div>
                         </td>

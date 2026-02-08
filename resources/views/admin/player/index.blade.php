@@ -56,9 +56,11 @@
                             @if ($player->status == 'available')
                                 <span class="badge bg-label-success me-1">Available</span>
                             @elseif($player->status == 'sold')
-                                <span class="badge bg-label-primery me-1">Sold</span>
+                                <span class="badge bg-label-primary me-1">Sold</span>
+                            @elseif($player->status == 'unsold')
+                                <span class="badge bg-label-warning me-1">Unsold</span>
                             @else
-                                <span class="badge bg-label-danger me-1">Unsold</span>
+                                <span class="badge bg-label-danger me-1">Not Available</span>
                             @endif
                         </td>
                         <td>
@@ -68,7 +70,9 @@
                                 </button>
                                 <div class="dropdown-menu">
                                     <a class="dropdown-item" href="{{ route('admin.player.edit', $player->guid) }}"><i class="bx bx-edit-alt me-1"></i> Edit</a>
-                                    <a class="dropdown-item" href="{{ route('admin.auction-player.edit', $player->guid) }}"><i class="bx bx-edit-alt me-1"></i> Player Auction</a>
+                                    @if ($player->status == 'available')
+                                        <a class="dropdown-item" href="{{ route('admin.auction-player.edit', $player->guid) }}"><i class="bx bx-edit-alt me-1"></i> Player Auction</a>
+                                    @endif
                                     <a class="dropdown-item" href="javascript:void(0);" onclick="deletePlayer('{{ $player->guid }}')"><i class="bx bx-trash me-1"></i> Delete</a>
                                 </div>
                             </div>

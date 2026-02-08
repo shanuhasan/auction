@@ -12,6 +12,11 @@ class Team extends Model
                     ->withPivot('price');
     }
 
+    static public function findById($id)
+    {
+        return self::where('id', $id)->first();
+    }
+
     static public function findByGuid($guid)
     {
         return self::where('guid', $guid)->first();
@@ -24,5 +29,17 @@ class Team extends Model
             ->where('status', '=', '1')
             ->where('is_deleted', '!=', '1')
             ->get();
+    }
+
+    static public function getName($id)
+    {
+        $model = self::findById($id);
+        return (!empty($model)) ? $model->name : '';
+    }
+
+    static public function remainingPurse($id)
+    {
+        $model = self::findById($id);
+        return (!empty($model)) ? $model->remaining_purse : '';
     }
 }

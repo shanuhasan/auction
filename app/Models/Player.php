@@ -21,6 +21,14 @@ class Player extends Model
         return self::where('guid', $guid)->first();
     }
 
+    static public function getAllPlayer()
+    {
+        return self::orderBy('name', 'ASC')
+            ->whereIn('status', ['available'])
+            ->where('is_deleted', '!=', '1')
+            ->get();
+    }
+
     static public function playerRole($key = null){
         $list = [
             'Batsman' => 'Batsman',
@@ -34,11 +42,18 @@ class Player extends Model
 
     static public function playerStatus($key = null){
         $list = [
+            'not-available' => 'Not Available',
             'available' => 'Available',
             'sold' => 'Sold',
-            'unsold' => 'Unsold'
+            'unsold' => 'Unsold'            
         ];
 
         return (isset($key)) ? (isset($list[$key]) ? $list[$key] : $key) : $list;
+    }
+
+    static public function getName($id)
+    {
+        $model = self::findById($id);
+        return (!empty($model)) ? $model->name : '';
     }
 }

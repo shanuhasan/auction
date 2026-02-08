@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\TeamController;
 use App\Http\Controllers\Admin\UserController;
@@ -13,6 +14,8 @@ use App\Http\Controllers\Admin\AuctionPlayerController;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/auction/{guid}', [HomeController::class, 'index'])->name('home.index');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
